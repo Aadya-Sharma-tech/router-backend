@@ -21,23 +21,38 @@ def devices():
 
 @app.route("/login", methods=["POST"])
 def login():
-    data = request.json
-    if data["username"] == "admin" and data["password"] == "admin123":
-        return jsonify({"success": True, "token": "dummy-token"})
-    return jsonify({"success": False}), 401
+    try:
+        data = request.get_json(force=True, silent=True)
 
-@app.route("/change-password", methods=["POST"])
-def change_password():
-    return jsonify({"success": True, "newPassword": "NewPass@123"})
+        if not data:
+            return jsonify({
+                "success": False,
+                "message": "No JSON received"
+            }), 400
 
-@app.route("/logs")
-def logs():
-    return jsonify([
-        {"timestamp": "23 Dec 2025 22:30", "newPassword": "••••••••"}
-    ])
+        username = data.get("username")
+        password = data.get("password")
+
+        if username == "admin" and password == "admin123":
+            return jsonify({
+                "success": True,
+                "token": "dummy-token"
+            }), 200
+
+        return jsonify({
+            "success": False,
+            "message": "Invalid credentials"
+        }), 200   # ⚠️ important (not 401)
+
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        }), 500
+
 
 import os
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
+    port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
